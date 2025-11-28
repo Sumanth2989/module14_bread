@@ -6,3 +6,4 @@ alembic
 psycopg2-binary
 pytest
 passlib[bcrypt]
+httpx
