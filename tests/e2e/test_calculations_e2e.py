@@ -9,7 +9,7 @@ BASE_URL = "http://localhost:8000"
 def ensure_test_user(db):
     # Create user if not exists
     test_email = "testuser@example.com"
-    test_password = "password123"[:72]  # truncate for bcrypt
+    test_password = "password123"[:72]  # truncate for bcrypt/argon2
     existing_user = db.query(User).filter(User.email == test_email).first()
     if not existing_user:
         user = User(email=test_email, hashed_password=get_password_hash(test_password))
@@ -18,12 +18,13 @@ def ensure_test_user(db):
         db.refresh(user)
     return test_email, test_password
 
-def test_bread_operations(page: Page, db=get_db()):
+def test_bread_operations(page: Page):
+    db = next(get_db())  # ✅ get actual Session object
     TEST_USERNAME, TEST_PASSWORD = ensure_test_user(db)
     
     # 1. LOGIN
     page.goto(f"{BASE_URL}/login")
-    page.fill("input[name='username']", TEST_USERNAME)
+    page.fill("input[name='email']", TEST_USERNAME)  # ✅ changed from 'username' to 'email'
     page.fill("input[name='password']", TEST_PASSWORD)
     page.click("button[type='submit']")
     page.wait_for_load_state("networkidle") 

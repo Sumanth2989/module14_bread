@@ -11,8 +11,11 @@ def make_unique_email():
     return f"test_{random.randint(1000, 9999)}@example.com"
 
 def ensure_user(db, email, password):
-    """Create the user if it doesn't exist (truncate password for bcrypt)"""
-    password = password[:72]  # truncate to 72 bytes
+    """
+    Create the user if it doesn't exist.
+    Password truncated to 72 bytes for bcrypt/argon2.
+    """
+    password = password[:72]
     existing_user = db.query(User).filter(User.email == email).first()
     if not existing_user:
         user = User(email=email, hashed_password=get_password_hash(password))
@@ -21,7 +24,11 @@ def ensure_user(db, email, password):
         db.refresh(user)
     return email, password
 
-def test_register_positive(page: Page, db=get_db()):
+# ----------------------------
+# REGISTER TEST
+# ----------------------------
+def test_register_positive(page: Page):
+    db = next(get_db())  # ✅ Get actual Session object
     email = make_unique_email()
     password = "password123"[:72]
 
@@ -39,19 +46,23 @@ def test_register_positive(page: Page, db=get_db()):
     user_in_db = db.query(User).filter(User.email == email).first()
     assert user_in_db is not None
 
-def test_login_positive(page: Page, db=get_db()):
+# ----------------------------
+# LOGIN TEST
+# ----------------------------
+def test_login_positive(page: Page):
+    db = next(get_db())  # ✅ Get actual Session object
     email = make_unique_email()
     password = "password123"[:72]
-    
-    # Make sure user exists
+
+    # Ensure user exists
     ensure_user(db, email, password)
-    
+
     # Go to login page
     page.goto(f"{BASE_URL}/login")
-    page.fill("input[name='username']", email)
+    page.fill("input[name='email']", email)
     page.fill("input[name='password']", password)
     page.click("button[type='submit']")
     page.wait_for_load_state("networkidle")
-    
+
     # Should redirect to calculations page
     expect(page).to_have_url(f"{BASE_URL}/calculations")

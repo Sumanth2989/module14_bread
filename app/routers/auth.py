@@ -32,19 +32,22 @@ def login_page(request: Request):
 
 @router.post("/login")
 def login(
-    response: Response,
-    username: str = Form(...),
+    request: Request,
+    email: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = authenticate_user(db, username, password, verify_password)
+    user = authenticate_user(db, email, password, verify_password)
     if not user:
-        return templates.TemplateResponse("login.html", {"request": response, "error": "Invalid credentials"})
+        return templates.TemplateResponse(
+            "login.html", {"request": request, "error": "Invalid credentials"}
+        )
 
     access_token = create_access_token(data={"sub": str(user.id)})
     response = RedirectResponse(url="/calculations", status_code=303)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
     return response
+
 
 # ----------------------------
 # LOGOUT ROUTE
@@ -56,7 +59,7 @@ def logout():
     return response
 
 # ----------------------------
-# BROWSER REGISTRATION ROUTES (for frontend / E2E)
+# REGISTRATION ROUTES (for frontend / E2E)
 # ----------------------------
 @router.get("/register")
 def register_page(request: Request):
@@ -64,14 +67,16 @@ def register_page(request: Request):
 
 @router.post("/register")
 def register(
+    request: Request,
     email: str = Form(...),
     password: str = Form(...),
-    db: Session = Depends(get_db),
-    request: Request = None
+    db: Session = Depends(get_db)
 ):
     existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
-        return templates.TemplateResponse("register.html", {"request": request, "error": "Email already registered"})
+        return templates.TemplateResponse(
+            "register.html", {"request": request, "error": "Email already registered"}
+        )
 
     hashed_pwd = get_password_hash(password)
     new_user = User(email=email, hashed_password=hashed_pwd)
@@ -79,8 +84,15 @@ def register(
     db.commit()
     db.refresh(new_user)
 
-    return RedirectResponse(url="/login", status_code=303)
+    # ✅ Must redirect to /login
+    response = RedirectResponse(url="/login", status_code=303)
+    return response
 
+
+
+# ----------------------------
+# API REGISTRATION ROUTE
+# ----------------------------
 @router.post("/api/register", status_code=status.HTTP_201_CREATED, response_model=UserRead)
 def api_register(email: str, password: str, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == email).first()
