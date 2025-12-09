@@ -12,3 +12,4 @@ python-jose[cryptography]
 python-multipart
 playwright
 pytest-playwright
+jinja2>=3.1.2
