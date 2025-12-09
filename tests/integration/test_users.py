@@ -5,7 +5,7 @@ client = TestClient(app)
 
 def test_register_and_login_user():
     # Use unique email so repeated runs don't fail
-    payload = {"email": "test_user@example.com", "password": "secret123"}
+    payload = {"email": "test_user@example.com", "password": "shortpassword"}
 
     # Register
     r = client.post("/users/register", json=payload)

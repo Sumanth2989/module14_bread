@@ -19,5 +19,5 @@ def test_calculation_bread_flow():
     create_payload = {"operand1": 10, "operand2": 5, "operation": "add"}
 
     # NOTE: The test now runs AS DUMMY_USER
-    r = client.post("/calculations/add", data=create_payload, allow_redirects=False)
+    r = client.post("/calculations/add", data=create_payload, follow_redirects=False)
     assert r.status_code == 303

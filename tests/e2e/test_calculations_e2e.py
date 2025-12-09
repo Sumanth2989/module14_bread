@@ -1,6 +1,6 @@
 import pytest
 from playwright.sync_api import Page, expect
-import time # Ensure this is imported at the top
+import time # Time is still used for the sleep trick if necessary, but we try to avoid it
 
 BASE_URL = "http://localhost:8000"
 
@@ -13,26 +13,22 @@ def test_bread_operations(page: Page):
     page.fill("input[name='username']", TEST_USERNAME)
     page.fill("input[name='password']", TEST_PASSWORD)
     
-    # --- FINAL FIX: Press 'Enter' on the password field to force reliable submission ---
-    page.press("input[name='password']", "Enter")
-    
-    # Wait for the browser to process the redirect (CRITICAL for E2E)
-    time.sleep(1) 
+    # --- FIX 1: Wait for navigation after login submission ---
+    # Using page.press("Enter") is the most robust way to trigger the submission event.
+    with page.expect_navigation():
+        page.press("input[name='password']", "Enter") 
     
     # Verify we successfully redirected to the calculations page
     expect(page).to_have_url(f"{BASE_URL}/calculations")
     expect(page.locator("body")).to_contain_text("My Calculations")
     
-    # ... (Rest of the test continues here) ...
-    
     # 2. ADD (Create)
-    # Since we are on the secure page, navigation will work correctly now
-    
     page.goto(f"{BASE_URL}/calculations/add") 
     page.fill("input[name='operand1']", "10")
     page.select_option("select[name='operation']", "add")
     page.fill("input[name='operand2']", "5")
     
+    # Wait for navigation after creation submission
     with page.expect_navigation():
         page.click("button[type='submit']")
     
@@ -41,11 +37,12 @@ def test_bread_operations(page: Page):
 
     # 4. EDIT (Update) 
     page.click("text=Edit")
-    page.fill("input[name='operand1']", "20") # Change 10 to 20.
+    page.fill("input[name='operand1']", "20") 
     
-    # --- NEW: Explicitly select 'add' during the edit ---
+    # Fix from previous step: Explicitly select 'add' during the edit 
     page.select_option("select[name='operation']", "add") 
     
+    # Wait for navigation after edit submission
     with page.expect_navigation():
         page.click("button[type='submit']")
         
