@@ -2,7 +2,7 @@ import random
 from playwright.sync_api import Page, expect
 from app.models.user import User
 from app.auth import get_password_hash
-from tests.e2e.helpers import ensure_test_user
+from .helpers import ensure_test_user
 
 BASE_URL = "http://localhost:8000"
 
