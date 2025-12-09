@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from app.db import get_db  # adjust import if get_db lives somewhere else
+from app.db import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
 from app.auth import hash_password, verify_password
@@ -12,9 +13,9 @@ router = APIRouter(
 )
 
 
-@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
-    # check if email already exists
+    # Check if email already exists
     existing = db.query(User).filter(User.email == user_in.email).first()
     if existing:
         raise HTTPException(
@@ -24,30 +25,24 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
 
     user = User(
         email=user_in.email,
-        hashed_password=hash_password(user_in.password),
+        hashed_password=hash_password(user_in.password[:72]),  # truncate to 72 bytes
     )
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
+
+    # Redirect to /login after successful registration
+    return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/login", response_model=UserRead)
 def login(user_in: UserCreate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == user_in.email).first()
-    if not user:
-        # do not reveal which part is wrong
+    if not user or not verify_password(user_in.password[:72], user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid email or password",
         )
 
-    if not verify_password(user_in.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid email or password",
-        )
-
-    # For Module 12 we keep it simple and just return the user.
-    # Tokens or sessions can be added later if needed.
+    # Return user for now; tokens can be added later
     return user
