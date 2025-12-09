@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserRead)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     # Check if email already exists
     existing = db.query(User).filter(User.email == user_in.email).first()
@@ -31,8 +31,9 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    # Redirect to /login after successful registration
-    return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
+    # Return JSON instead of redirect for API tests
+    return user
+
 
 
 @router.post("/login", response_model=UserRead)
