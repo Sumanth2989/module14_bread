@@ -16,7 +16,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 # and setting the scheme directly to avoid auto-detection errors.
 pwd_context = CryptContext(
     schemes=["bcrypt"],
-    default="bcrypt",
+    default="auto",
     # Passlib documentation recommends listing the handlers explicitly:
     backends={
         "bcrypt": bcrypt, 
