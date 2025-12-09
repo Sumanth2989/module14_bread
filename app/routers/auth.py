@@ -2,14 +2,26 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+from passlib.context import CryptContext
 
 from app.db import get_db
 from app.models.user import User
-from app.auth import authenticate_user, create_access_token, get_password_hash
+from app.auth import authenticate_user, create_access_token
 from app.schemas.user import UserRead
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+
+# ----------------------------
+# PASSWORD HASHING CONTEXT
+# ----------------------------
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
 # ----------------------------
 # LOGIN ROUTES
@@ -25,7 +37,7 @@ def login(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = authenticate_user(db, username, password)
+    user = authenticate_user(db, username, password, verify_password)
     if not user:
         return templates.TemplateResponse("login.html", {"request": response, "error": "Invalid credentials"})
 
@@ -61,13 +73,12 @@ def register(
     if existing_user:
         return templates.TemplateResponse("register.html", {"request": request, "error": "Email already registered"})
 
-    hashed_pwd = get_password_hash(password[:72])  # truncate to 72 bytes
+    hashed_pwd = get_password_hash(password)
     new_user = User(email=email, hashed_password=hashed_pwd)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    # Redirect to login page for browser workflow
     return RedirectResponse(url="/login", status_code=303)
 
 # ----------------------------
@@ -79,10 +90,10 @@ def api_register(email: str, password: str, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    hashed_pwd = get_password_hash(password[:72])  # truncate to 72 bytes
+    hashed_pwd = get_password_hash(password)
     new_user = User(email=email, hashed_password=hashed_pwd)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    return new_user  # JSON response for integration tests
+    return new_user
