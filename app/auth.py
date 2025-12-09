@@ -14,9 +14,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 # --- PERMANENT FIX FOR 72-BYTE PASSWORD BUG ---
 # Explicitly configure the context using the specific bcrypt handler 
 # and setting the scheme directly to avoid auto-detection errors.
+# --- PERMANENT FIX FOR 72-BYTE PASSWORD BUG ---
+# Explicitly configure the context using the specific bcrypt handler 
+# and setting the scheme directly to avoid auto-detection errors.
 pwd_context = CryptContext(
     schemes=["bcrypt"],
-    default="auto",
+    default="bcrypt", # <-- THIS IS THE CRITICAL FIX
     # Passlib documentation recommends listing the handlers explicitly:
     backends={
         "bcrypt": bcrypt, 
