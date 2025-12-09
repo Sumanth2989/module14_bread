@@ -1,6 +1,5 @@
 import sys
 from pathlib import Path
-
 import pytest
 
 # Ensure project root is on sys.path so "import app" works in tests
@@ -9,18 +8,15 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 
+from app.db import get_db
+
 @pytest.fixture
 def db_session():
     """
-    Simple database session fixture for integration tests.
-    Uses the same engine and SessionLocal as the app.
+    Provides a database session for E2E tests.
+    Uses the same Session as the app via get_db().
     """
-    from app.db import Base, engine, SessionLocal
-
-    # Make sure tables exist
-    Base.metadata.create_all(bind=engine)
-
-    db = SessionLocal()
+    db = next(get_db())  # ✅ get actual Session object
     try:
         yield db
     finally:

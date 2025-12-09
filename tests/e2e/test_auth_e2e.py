@@ -1,34 +1,16 @@
-import pytest
+import random
 from playwright.sync_api import Page, expect
-from app.db import get_db
 from app.models.user import User
 from app.auth import get_password_hash
-import random
+from tests.e2e.helpers import ensure_test_user
 
 BASE_URL = "http://localhost:8000"
 
 def make_unique_email():
     return f"test_{random.randint(1000, 9999)}@example.com"
 
-def ensure_user(db, email, password):
-    """
-    Create the user if it doesn't exist.
-    Password truncated to 72 bytes for bcrypt/argon2.
-    """
-    password = password[:72]
-    existing_user = db.query(User).filter(User.email == email).first()
-    if not existing_user:
-        user = User(email=email, hashed_password=get_password_hash(password))
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    return email, password
-
-# ----------------------------
-# REGISTER TEST
-# ----------------------------
-def test_register_positive(page: Page):
-    db = next(get_db())  # ✅ Get actual Session object
+def test_register_positive(page: Page, db_session):
+    db = db_session
     email = make_unique_email()
     password = "password123"[:72]
 
@@ -46,20 +28,13 @@ def test_register_positive(page: Page):
     user_in_db = db.query(User).filter(User.email == email).first()
     assert user_in_db is not None
 
-# ----------------------------
-# LOGIN TEST
-# ----------------------------
-def test_login_positive(page: Page):
-    db = next(get_db())  # ✅ Get actual Session object
-    email = make_unique_email()
-    password = "password123"[:72]
-
-    # Ensure user exists
-    ensure_user(db, email, password)
+def test_login_positive(page: Page, db_session):
+    db = db_session
+    email, password = ensure_test_user(db)  # use helper to create user
 
     # Go to login page
     page.goto(f"{BASE_URL}/login")
-    page.fill("input[name='email']", email)
+    page.fill("input[name='email']", email)  # updated to 'email'
     page.fill("input[name='password']", password)
     page.click("button[type='submit']")
     page.wait_for_load_state("networkidle")
