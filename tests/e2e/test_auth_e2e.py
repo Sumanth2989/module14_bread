@@ -12,14 +12,15 @@ def test_register_positive(page: Page):
     password = "password123"[:72]  # truncate to 72 bytes
 
     page.goto(f"{BASE_URL}/register")
-    
+
     page.fill('input[name="email"]', email)
     page.fill('input[name="password"]', password)
-    
-    # Wait for redirect to login
-    with page.expect_navigation():
-        page.click('button[type="submit"]')
-    
+
+    # --- Wait for navigation after clicking submit ---
+    page.click('button[type="submit"]')
+    page.wait_for_url(f"{BASE_URL}/login", timeout=10000)  # wait up to 10s
+
+    # Confirm URL is /login
     expect(page).to_have_url(f"{BASE_URL}/login")
 
 def test_login_positive(page: Page):
@@ -30,16 +31,15 @@ def test_login_positive(page: Page):
     page.goto(f"{BASE_URL}/register")
     page.fill('input[name="email"]', email)
     page.fill('input[name="password"]', password)
-    
-    with page.expect_navigation():
-        page.click('button[type="submit"]')
-    
-    # 2. Login
+    page.click('button[type="submit"]')
+    page.wait_for_url(f"{BASE_URL}/login", timeout=10000)
+
+    # 2. Now login
     page.goto(f"{BASE_URL}/login")
-    page.fill('input[name="email"]', email)  # <-- changed from username to email
+    page.fill('input[name="username"]', email)  # or 'email' if your form uses that
     page.fill('input[name="password"]', password)
-    
-    with page.expect_navigation():
-        page.click('button[type="submit"]')
-    
+    page.click('button[type="submit"]')
+    page.wait_for_url(f"{BASE_URL}/calculations", timeout=10000)
+
+    # Confirm URL is /calculations
     expect(page).to_have_url(f"{BASE_URL}/calculations")
