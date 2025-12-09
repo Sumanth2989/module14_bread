@@ -31,6 +31,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+          pip install jinja2  # <--- ADDED THIS EXPLICIT INSTALLATION FIX
           python -m playwright install --with-deps
 
       # NOTE: The failing 'Copy Database' step has been removed. 
