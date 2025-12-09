@@ -32,7 +32,7 @@ COPY --from=builder /usr/local/bin/ /usr/local/bin/
 
 # Copy the rest of the application code
 COPY app /app/app
-COPY test.db /app/test.db  # Copy the database file for initial deployment
+# COPY test.db /app/test.db  # Removed because test.db does not exist
 
 # Expose the port Uvicorn runs on
 EXPOSE 8000
