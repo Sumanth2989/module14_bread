@@ -81,9 +81,6 @@ def register(
 
     return RedirectResponse(url="/login", status_code=303)
 
-# ----------------------------
-# API REGISTRATION ROUTE (for pytest integration)
-# ----------------------------
 @router.post("/api/register", status_code=status.HTTP_201_CREATED, response_model=UserRead)
 def api_register(email: str, password: str, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == email).first()

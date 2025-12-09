@@ -381,5 +381,61 @@ Module 13 focuses on building full-stack functionality around user authenticatio
 - Successful builds push image to Docker Hub.
 
 
+# Module14 Bread Dockerized Application
 
+This repository contains a Python-based application packaged and deployed using Docker. The application uses FastAPI and SQLite. This document provides instructions for building, running, and pushing the Docker image.
+
+## Prerequisites
+
+- Docker installed on your system: [Docker Installation Guide](https://docs.docker.com/get-docker/)
+- Python 3.11 (for local development if needed)
+- Docker Hub account
+- `app/`: Contains the main application code.
+- `test.db`: Initial SQLite database file.
+- `requirements.txt`: Python dependencies.
+- `Dockerfile`: Instructions to build the Docker image.
+
+## Usage Flow
+
+Register: Navigate to /register to create a new user account.
+
+Login: Log in with your new credentials at /login.
+
+BREAD Operations: You will be redirected to /calculations, where you can perform all BREAD operations:
+
+Browse/List: View all past calculations.
+
+Add: Click the "Add New Calculation" link.
+
+View: You can search for particular calculations based on their id.
+
+Edit: Click the "Edit" link to modify the operands.
+
+Delete: Click the "Delete" button.
+
+ Executing Tests Locally
+
+To prove the application's functionality and security, run the automated E2E tests.
+
+## Dockerfile Overview
+
+1. **Builder Stage**
+   - Uses `python:3.11-slim` as the base image.
+   - Installs build dependencies like `gcc`.
+   - Copies `requirements.txt` and installs Python packages.
+
+2. **Runtime Stage**
+   - Uses `python:3.11-slim` as a smaller runtime image.
+   - Copies Python packages from the builder stage.
+   - Copies application code and `test.db`.
+   - Exposes port `8000` for FastAPI.
+   - Runs the application with Uvicorn.
+
+## Building the Docker Image
+
+```bash
+docker build -t module14_bread .
+Running the Docker Container Locally
+docker run -d -p 8000:8000 module14_bread
+Visit http://localhost:8000 to access the application.
 

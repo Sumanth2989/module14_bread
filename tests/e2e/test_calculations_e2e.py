@@ -26,9 +26,8 @@ def test_bread_operations(page: Page, db=get_db()):
     page.fill("input[name='username']", TEST_USERNAME)
     page.fill("input[name='password']", TEST_PASSWORD)
     page.click("button[type='submit']")
-    page.wait_for_load_state("networkidle")  # <-- Wait for redirect to complete
-    
-    # Verify we successfully redirected to the calculations page
+    page.wait_for_load_state("networkidle") 
+
     expect(page).to_have_url(f"{BASE_URL}/calculations")
     expect(page.locator("body")).to_contain_text("My Calculations")
     
