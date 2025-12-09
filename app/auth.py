@@ -23,8 +23,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
-    """Hash a plaintext password."""
-    return pwd_context.hash(password)
+    # --- CRITICAL FIX: Truncate the password to 72 bytes before hashing ---
+    return pwd_context.hash(password[:72])
 
 # Alias for consistency
 hash_password = get_password_hash
